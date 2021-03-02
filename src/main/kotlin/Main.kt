@@ -37,7 +37,7 @@ fun main() {
         thread.start()
         println("Checking what you have to see next...")
         thread.join()
-        val subjects = thread.subjects
+        var subjects = thread.subjects
 
 
         val yourPlan = subjects.toList().sortedBy { (key, value) -> value }.toMap()
@@ -50,6 +50,7 @@ fun main() {
             println("Fach: " + it.key.substring(0, it.key.length - 1) + " ist um " + "${it.value}")
         }
         println("Drücke eine Taste um weiterzugehen")
+        subjects.clear()
         readLine()
     }
 
