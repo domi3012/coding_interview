@@ -14,7 +14,10 @@ repositories {
 dependencies {
     testImplementation(kotlin("test-junit"))
     implementation("org.jsoup:jsoup:1.11.3")
-    implementation("com.squareup.okhttp3:okhttp:3.10.0")
+    implementation("io.ktor:ktor-server-core:1.5.2")
+    implementation("io.ktor:ktor-server-netty:1.5.2")
+    implementation("io.ktor:ktor-client-cio:1.5.2")
+    implementation("ch.qos.logback:logback-classic:1.2.3")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.1.0")
     implementation("com.google.code.gson:gson:2.8.5")
 }
