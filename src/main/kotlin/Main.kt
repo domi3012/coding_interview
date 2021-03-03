@@ -50,7 +50,7 @@ fun getTimeLines(mapping: Map<String, String>): MutableMap<String, LocalDateTime
             }
             matches2.forEach { matched ->
                 val tmp = matched.groups[0]!!.value
-                hour.add(tmp.toString().replace('.', ':').substring(0, tmp.toString().length - 1))
+                hour.add(tmp.toString().replace('.', ':').replace(' ', ':').substring(0, tmp.toString().length - 1))
             }
         } else if (eventList.size != 0) {
 
