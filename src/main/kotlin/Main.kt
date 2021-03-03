@@ -40,12 +40,13 @@ fun getTimeLines(mapping: Map<String, String>): MutableMap<String, LocalDateTime
         }
         //TODO check when null
         val mappingLV = document!!.select(".usse-id-group")
-        println(mappingLV)
-        val date = mappingLV.select(".date")
-        val hour = mappingLV.select(".time")
+        //println(mappingLV)
         //TODO extract dates from string maybe regex?
         val tmp = mappingLV.select(".eventinfo")
-        println(tmp);
+        val eventList = mappingLV.select(".events")
+        val date = eventList.select(".date")
+        val hour = eventList.select(".time")
+        //println(tmp);
         var counter = 0
         date.zip(hour).forEach { pair ->
             val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy H:m")
