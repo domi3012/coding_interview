@@ -14,11 +14,15 @@ var connection : Connection? = null
 
 fun getTimeLines(mapping: Map<String, String>): MutableMap<String, LocalDateTime> {
     var subjects = mutableMapOf<String, LocalDateTime>()
+    var UIcounter = 0
     mapping.forEach { key, value ->
         var document: Document?
         try {
             connection!!.url("$uni$key")
             document = connection!!.get()
+            print(". ")
+            UIcounter++;
+            if (UIcounter % 40 == 0) println()
 
             val statusCode = connection!!.response().statusCode()
             if(statusCode == 200) {
@@ -50,9 +54,6 @@ fun getTimeLines(mapping: Map<String, String>): MutableMap<String, LocalDateTime
             date.add(tmp.substring(0, length))}
         matches2.forEach { matched -> val tmp = matched.groups[0]!!.value
             hour.add(tmp.toString().replace('.',':').substring(0, tmp.toString().length-1))}
-        //println(date)
-        //print(hour)// Alice, Bob, Eve
-        //val split = tmp.text().split("\\([A-z]*,? -*[A-z]*".toRegex())
         }else if (eventList.size != 0) {
 
             eventList.select(".date").forEach{elem ->
@@ -66,7 +67,6 @@ fun getTimeLines(mapping: Map<String, String>): MutableMap<String, LocalDateTime
             eventList.select(".time").forEach{elem ->
                 val tmp = elem.text().replace('.', ':')
                 if(tmp.length != 0) hour.add(tmp.substring(0, tmp.length - 8))}
-            //println(tmp);
         }
         var counter = 0
         date.zip(hour).forEach { pair ->
@@ -85,6 +85,7 @@ fun getTimeLines(mapping: Map<String, String>): MutableMap<String, LocalDateTime
 
         }
     }
+    println()
     return subjects
 }
 
@@ -138,10 +139,7 @@ while (true) {
         continue
     }
 
-    //val thread = LVs(subject)
-    //thread.start()
-    //println("Checking what you have to see next...")
-    //thread.join()
+    println("Läd gerade deine nächsten LV's")
     var subjects = getAllLV(subject)
 
 
