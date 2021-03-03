@@ -4,32 +4,24 @@ import org.jsoup.nodes.Document
 import java.io.IOException
 import java.lang.Exception
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
 val uni = "https://ufind.univie.ac.at/de/"
 val year = Calendar.getInstance().get(Calendar.YEAR)
+var connection : Connection? = null
 
-fun getTimeLineFormat(){
-    val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy H:m")
-    //var time = pair.second.text().split('-')
-    //val begin = LocalTime.parse(time[0].trimEnd())
-    //val dateTime = LocalDateTime.parse(pair.first.text()+"$year "+ "$begin", formatter)
-}
 
 fun getTimeLines(mapping: Map<String, String>): MutableMap<String, LocalDateTime> {
     var subjects = mutableMapOf<String, LocalDateTime>()
     mapping.forEach { key, value ->
         var document: Document?
         try {
-            val response = Jsoup.connect("$uni$key")
-                .method(Connection.Method.GET)
-                .userAgent("Opera").timeout(10*100000)
-                .execute()
-            val statusCode = response.statusCode()
+            connection!!.url("$uni$key")
+            document = connection!!.get()
+
+            val statusCode = connection!!.response().statusCode()
             if(statusCode == 200) {
-                document = response.parse()
             }else{
                 throw Exception("error with connection")
             }
@@ -44,18 +36,52 @@ fun getTimeLines(mapping: Map<String, String>): MutableMap<String, LocalDateTime
         //TODO extract dates from string maybe regex?
         val tmp = mappingLV.select(".eventinfo")
         val eventList = mappingLV.select(".events")
-        val date = eventList.select(".date")
-        val hour = eventList.select(".time")
-        //println(tmp);
+        var date = mutableListOf<String>()
+        var hour = mutableListOf<String>()
+        if (tmp.size != 0){
+        val regex = Regex("(\\d{2}.\\d{2}.\\d{4},?[^)])")
+        val regex2 = Regex("([0-2]?[0-9].?:?[0-6][0-9]-)")
+        val matches = regex.findAll(tmp.text())
+        val matches2 = regex2.findAll(tmp.text())
+
+        matches.forEach { matched -> val tmp = matched.groups[0]!!.value.toString()
+            var indexOf = tmp.indexOf(',')
+            var length = if (indexOf != -1) indexOf  else tmp.length-1
+            date.add(tmp.substring(0, length))}
+        matches2.forEach { matched -> val tmp = matched.groups[0]!!.value
+            hour.add(tmp.toString().replace('.',':').substring(0, tmp.toString().length-1))}
+        //println(date)
+        //print(hour)// Alice, Bob, Eve
+        //val split = tmp.text().split("\\([A-z]*,? -*[A-z]*".toRegex())
+        }else if (eventList.size != 0) {
+
+            eventList.select(".date").forEach{elem ->
+                var tmp = elem.text()
+                if (tmp.length < 7){
+                    tmp += "$year"
+                }else{
+
+                }
+                date.add(tmp)}
+            eventList.select(".time").forEach{elem ->
+                val tmp = elem.text().replace('.', ':')
+                if(tmp.length != 0) hour.add(tmp.substring(0, tmp.length - 8))}
+            //println(tmp);
+        }
         var counter = 0
         date.zip(hour).forEach { pair ->
+            if (pair.first.length == 0 || pair.second.length == 0){
+                return@forEach
+            }
             val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy H:m")
-            var time = pair.second.text().split('-')
-            val begin = LocalTime.parse(time[0].trimEnd())
-            val dateTime = LocalDateTime.parse(pair.first.text()+"$year "+ "$begin", formatter)
+            try {
+                val dateTime = LocalDateTime.parse("${pair.first} ${pair.second}", formatter)
+                subjects.put("$value$counter", dateTime )
+                counter++
+            }catch (e: Exception){
+                e.printStackTrace()
+            }
 
-            subjects.put("$value$counter", dateTime )
-            counter++
 
         }
     }
@@ -66,11 +92,8 @@ fun getAllLV(url: String): MutableMap<String, LocalDateTime> {
     var document: Document? = null
     var mappingValues = mutableMapOf<String, String>()
     try {
-        val addExamResponse = Jsoup.connect("$uni$url")
-            .method(Connection.Method.GET).timeout(10*100000)
-            .userAgent("Opera")
-            .execute()
-        document = addExamResponse.parse()
+        connection!!.url("$uni$url")
+        document = connection!!.get()
     } catch (e: IOException) {
         e.printStackTrace()
     }
@@ -86,11 +109,8 @@ fun main() {
     var mapping = mutableMapOf<String, String>()
     var document: Document? = null
     try {
-        val addExamResponse = Jsoup.connect("https://ufind.univie.ac.at/de/vvz.html")
-            .method(Connection.Method.GET).timeout(10 * 100000)
-            .userAgent("Opera")
-            .execute()
-        document = addExamResponse.parse()
+        connection = Jsoup.connect("https://ufind.univie.ac.at/de/vvz.html").userAgent("Opera").timeout(10*100000)
+        document = connection!!.get()
     } catch (e: IOException) {
         e.printStackTrace()
     }
@@ -98,37 +118,47 @@ fun main() {
     mappingHref.forEach { mapping.put(it.text(), it.attr("href"))}
     mapping.remove(mapping.keys.first())
 
+while (true) {
 
-
-        println("Zur Zeit gibt es diese Studienrichtungen")
-        mapping.forEach { it -> println(it.key) }
-        println("Wähle dein Studium aus")
-        var input: String? = ""
-        while (input == "") {
-            input = readLine()
+    println("Zur Zeit gibt es diese Studienrichtungen")
+    mapping.forEach { it -> println(it.key) }
+    println("Wähle dein Studium aus")
+    var input: String? = ""
+    while (input == "") {
+        input = readLine()
+        if (input == "exit"){
+            break
         }
+    }
+    var subject: String = ""
+    try {
+        subject = mapping[input]!!
+    } catch (e: Exception) {
+        println("Studium nicht gefunden")
+        continue
+    }
 
-        val subject = mapping[input]!!
-        //val thread = LVs(subject)
-        //thread.start()
-        //println("Checking what you have to see next...")
-        //thread.join()
-        var subjects = getAllLV(subject)
+    //val thread = LVs(subject)
+    //thread.start()
+    //println("Checking what you have to see next...")
+    //thread.join()
+    var subjects = getAllLV(subject)
 
 
-        val yourPlan = subjects.toList().sortedBy { (key, value) -> value }.toMap()
+    val yourPlan = subjects.toList().sortedBy { (key, value) -> value }.toMap()
 
-        var counter = 0
+    var counter = 0
 
-        for (it in yourPlan) {
-            if (it.value.isAfter(LocalDateTime.now())) {
-                counter++
-                if (counter > 10) break
-                println("Fach: " + it.key.substring(0, it.key.length - 1) + " ist um " + "${it.value}")
-            }
+    for (it in yourPlan) {
+        if (it.value.isAfter(LocalDateTime.now())) {
+            counter++
+            if (counter > 10) break
+            println("Fach: " + it.key.substring(0, it.key.length - 1) + " ist um " + "${it.value}")
         }
-        println("Drücke eine Taste um weiterzugehen")
-        subjects.clear()
-        readLine()
+    }
+    println("Drücke eine Taste um weiterzugehen")
+    subjects.clear()
+    readLine()
+}
 
 }
