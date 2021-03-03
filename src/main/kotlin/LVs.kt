@@ -27,7 +27,7 @@ class LVs(val url: String) : Thread() {
             try {
                 val response = Jsoup.connect("$uni$key")
                     .method(Connection.Method.GET)
-                    .userAgent("Opera").timeout(10*1000)
+                    .userAgent("Opera").timeout(10*100000)
                     .execute()
                 val statusCode = response.statusCode()
                 if(statusCode == 200) {
@@ -63,7 +63,7 @@ class LVs(val url: String) : Thread() {
         var mappingValues = mutableMapOf<String, String>()
         try {
             val addExamResponse = Jsoup.connect("$uni$url")
-                .method(Connection.Method.GET).timeout(10*1000)
+                .method(Connection.Method.GET).timeout(10*100000)
                 .userAgent("Opera")
                 .execute()
             document = addExamResponse.parse()
