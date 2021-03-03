@@ -139,6 +139,8 @@ fun main() {
 
         var counter = 0
 
+        if (yourPlan.size == 0) println("Konnten keine Termine für Dich finden")
+
         for (it in yourPlan) {
             if (it.value.isAfter(LocalDateTime.now())) {
                 counter++
